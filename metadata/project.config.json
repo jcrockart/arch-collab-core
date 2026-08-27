@@ -1,0 +1,25 @@
+{
+  "project": "arch-collab-core",
+  "git": {
+    "remote": "git@github.com:jcrockart/arch-collab-core.git",
+    "default_branch": "main"
+  },
+  "hosting": {
+    "provider": "Micron21 reseller cPanel/WHM",
+    "server_host": "cp-kil-m-021.micron21.com",
+    "account_username": "crockart",
+    "domain": "crockart.com.au",
+    "document_root": "/home/crockart/arch-collab-core",
+    "deploy_path": "/home/crockart/arch-collab-core"
+  },
+  "deployment": {
+    "mechanism": "ssh-git-pull",
+    "post_pull_steps": []
+  },
+  "capabilities": {
+    "runtime": "php",
+    "database": "none",
+    "scheduled_jobs": false,
+    "tls": "autossl"
+  }
+}
