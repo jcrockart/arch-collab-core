@@ -36,7 +36,7 @@ GRACE_DAYS = 7
 
 
 def sh(*args, check=True):
-    return subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True, check=check)
+    return subprocess.run(["git", *args], cwd=REPO, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, check=check)  # py3.6 compat: capture_output=/text= added in 3.7
 
 
 def current_branch():
@@ -221,10 +221,12 @@ def codegen_generate():
 # ---------------------------------------------------------------------------
 def main():
     p = argparse.ArgumentParser(prog="arch")
-    sub = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(dest="cmd")
+    sub.required = True  # py3.6 compat: add_subparsers() gained required= in 3.7
 
     s = sub.add_parser("session")
-    ssub = s.add_subparsers(dest="action", required=True)
+    ssub = s.add_subparsers(dest="action")
+    ssub.required = True  # py3.6 compat
     start = ssub.add_parser("start")
     start.add_argument("name", nargs="?", default=None)
     commit = ssub.add_parser("commit")
@@ -236,7 +238,8 @@ def main():
     recover.add_argument("name")
 
     c = sub.add_parser("codegen")
-    csub = c.add_subparsers(dest="action", required=True)
+    csub = c.add_subparsers(dest="action")
+    csub.required = True  # py3.6 compat
     csub.add_parser("preview")
     csub.add_parser("generate")
 
