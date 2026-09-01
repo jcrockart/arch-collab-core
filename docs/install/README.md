@@ -88,11 +88,16 @@ About one minute.
 
 ### Open items before this bundle is usable
 
-- Both RCP files contain `[wife's name]` placeholders. Fill them in.
-- The write-capable MCP endpoint for `rcp` **did not exist** when these were
-  written — only the arch-collab equivalent. Confirm it is live first.
-- The connector URL should carry a shared-secret token (agreed 2026-08-31)
-  rather than being open to the public internet. Confirm before handing it over.
+Bundle B is **not yet installable**. Three things are outstanding, in order:
+
+1. **No `rcp`-scoped MCP endpoint exists.** The live server's site lane is scoped to
+   `arch-collab-core/site` only. Something has to serve `rcp` first — and it is undecided
+   whether that is a second server instance or a project-scoped lane on the existing one.
+2. **The server has no authentication at all.** Anyone with the URL can call every tool,
+   including both write lanes. Fine for a single-user spike; not fine for a second person.
+   Fix before any URL leaves James's hands. See Codegen CLI Design §9 item 5.
+3. **Two facts are still unrecorded:** the practice's trading name and its production
+   domain. `RCP-DEV-context.md` flags both rather than guessing.
 
 ---
 
