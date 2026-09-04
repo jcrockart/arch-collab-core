@@ -33,14 +33,66 @@ ARCH-COLLAB project docs. Manifest below.
 
 ---
 
+## How a connector is addressed
+
+Read this once before installing anything. It is the part that has changed
+most, and the part that is easiest to get subtly wrong.
+
+Every connector needs **two** things: a **URL**, which identifies *which space*,
+and a **token**, sent as a header, which is *the entire authorisation*. The URL
+is not a secret. The token is the whole of the secret.
+
+```
+URL      https://mcp.crockart.com.au/project/rcp-dev/
+Header   x-api-key: <the rcp-dev token>
+Auth     None          <- the dialog's own auth setting; the header does the work
+```
+
+Two URL shapes:
+
+| Shape | Meaning |
+|---|---|
+| `/project/<name>/` | A **dedicated** space — one profile, one root, one owner. |
+| `/group/<name>/<sub>/` | A **shared** space. The token authorises the *group*; the last segment picks a sub-project inside it, e.g. `/group/family/calendar/`. |
+
+The `<name>` must match the token's profile label exactly, including case. If it
+does not, the server returns 404 — deliberately, so that a connector pointed at
+the wrong space with a valid token fails loudly instead of quietly succeeding
+against someone else's tree.
+
+**Three things about claude.ai connectors that will otherwise cost you an hour
+each:**
+
+1. **They are account-level, not project-level.** Adding one makes it available
+   in every project on the account; the per-project toggle is a convenience
+   filter, not a boundary. What actually keeps a project inside its own tree is
+   the token's scope profile, enforced server-side.
+2. **They are deduplicated by URL across the whole organisation.** A second
+   connector on a URL already registered is refused as a duplicate. This is the
+   reason each space needs its own URL rather than one shared endpoint — that
+   was the original design and it does not work here.
+3. **Custom header names need Anthropic approval.** The dialog offers a fixed
+   list. `x-api-key` is on it; a bespoke name is not, and shows an error. That
+   is why the header is called what it is.
+
+---
+
 ## Install bundle A — ARCH-COLLAB
 
 ### Before you start: two fixes
 
 Both of these propagate into every future install if not fixed first.
 
-1. The current ARCH-COLLAB project lists **`ARCH-CONSTITUTION.md` twice**.
-   Delete the duplicate.
+1. The current ARCH-COLLAB project holds **two different documents both named
+   `ARCH-CONSTITUTION.md`** — not a duplicate, a superseded draft that was
+   uploaded alongside its replacement rather than over it. The older one
+   (~6k, 2026-08-25, first line `# ARCH Constitution (Legacy Edition)`)
+   contradicts the current one: it instructs readers to carry the "Legacy
+   Edition" subtitle forward, describes discard as a hard delete with no
+   recovery, omits rule 12, and omits rule 5's caveat that a `COMMITTED`
+   message does not prove metadata persisted. Retrieval can return either.
+   Delete the older one — and check by first line or size, not position in
+   the list.
 2. **`agent-connection-layer.md` is stale** — it documents 5 tools; 11 are live,
    and its `arch_session_discard` note still says hard delete. Either update it
    or leave it out of the copy. Shipping it as-is teaches a fresh thread the
@@ -64,9 +116,13 @@ Both of these propagate into every future install if not fixed first.
      `workflow.schema.json`, `integration.schema.json`
    - `todo.json`, `todo.domain.json`, `todo.workflow.json`, `todo.api.json`
 
-4. **Add connectors** — Customize → Connectors:
+4. **Add connectors** — Customize → Connectors → Add ▾ → Add custom connector:
+
    - Atlassian Rovo (Confluence, space AW)
-   - `https://mcp.crockart.com.au/` — custom connector
+   - **ARCH (arch-collab)**
+     - URL `https://mcp.crockart.com.au/project/arch-collab/`
+     - Authentication **None**
+     - Request header `x-api-key` = the `arch-collab` token
 
 5. **Verify.** New thread → paste `ARCH-COLLAB-bootstrap-prompt.md` → read the
    PASS/FAIL table before doing any real work. It checks that the knowledge
@@ -82,22 +138,110 @@ About three minutes.
 1. **Create the project.**
 2. **Set project instructions** → paste `RCP-DEV-project-instructions.md`.
 3. **Upload knowledge** → `RCP-DEV-context.md` only.
-4. **Add connector** → the site-scoped MCP URL for `rcp`.
+4. **Add connector** → **ARCH (rcp-dev)**
+   - URL `https://mcp.crockart.com.au/project/rcp-dev/`
+   - Authentication **None**
+   - Request header `x-api-key` = the `rcp-dev` token
 
 About one minute.
 
-### Open items before this bundle is usable
+**Confirm it before handing it over:** a new thread should see exactly **3**
+tools — `arch_site_list_files`, `arch_site_read_file`, `arch_site_write_file` —
+and no `arch_session_*`. If more than three appear, stop and check which token
+went into the header.
 
-Bundle B is **not yet installable**. Three things are outstanding, in order:
+---
 
-1. **No `rcp`-scoped MCP endpoint exists.** The live server's site lane is scoped to
-   `arch-collab-core/site` only. Something has to serve `rcp` first — and it is undecided
-   whether that is a second server instance or a project-scoped lane on the existing one.
-2. **The server has no authentication at all.** Anyone with the URL can call every tool,
-   including both write lanes. Fine for a single-user spike; not fine for a second person.
-   Fix before any URL leaves James's hands. See Codegen CLI Design §9 item 5.
-3. **Two facts are still unrecorded:** the practice's trading name and its production
-   domain. `RCP-DEV-context.md` flags both rather than guessing.
+## Provisioning a new space
+
+Three steps, all on the server, all by a human. Tokens are never pasted into a
+chat, a repo, or Confluence.
+
+1. **Mint a token and add the profile.**
+
+   ```
+   cd ~/arch-mcp-php
+   python3 bin/mint-tokens.py --url <name>
+   python3 bin/check-tokens.py          # catches duplicate JSON keys
+   ```
+
+   `check-tokens.py` is not optional politeness. Duplicate keys in
+   `tokens.json` collapse silently — `json.loads` keeps the last and raises
+   nothing — and this has already hidden a live profile once.
+
+2. **Give the profile a root and lanes** in
+   `~/arch-mcp-secrets/tokens.json`. The root must already exist; a profile
+   pointing at a missing directory is refused rather than created, so a typo
+   fails instead of minting an empty tree.
+
+   ```json
+   {
+     "<token>": {
+       "label": "rcp-dev",
+       "kind": "project",
+       "root": "/home/crockart/public_html/rcp",
+       "lanes": { "site": "" },
+       "session_tools": false,
+       "write_extensions": ["html", "css", "js", "png", "svg", "txt"]
+     }
+   }
+   ```
+
+   `write_extensions` matters wherever the root is served by a webserver:
+   without it, a write of `shell.php` is remote code execution. Omit it only
+   for a root that PHP will never execute.
+
+3. **Register the connector** at `/project/<label>/` with the token in
+   `x-api-key`, then confirm the tool count.
+
+### Group spaces
+
+A group is one token shared by several people, with a sub-project per URL:
+
+```json
+{
+  "<token>": {
+    "label": "family",
+    "kind": "group",
+    "seed": true,
+    "root": "/home/crockart/groups/family",
+    "lanes": { "site": "" },
+    "session_tools": false
+  }
+}
+```
+
+With `"seed": true`, naming a sub-project that does not exist **creates** it —
+`/group/family/calendar/` works with no provisioning step. That is the point of
+a group, and it is also the trap: `/group/family/calender` seeds an empty space
+rather than failing, so a typo looks like a working connector with nothing in
+it. Set `"seed": false` once a group's sub-projects are established.
+
+> **Sub-projects are not isolated from each other.** The group key is the
+> boundary. Anyone who can reach `/group/family/calendar/` can reach
+> `/group/family/anything-else/` by editing the URL. Give a group token only to
+> people trusted with the entire group — a group is one tenant, not several.
+
+---
+
+## When something returns 404
+
+The server answers 404 for every refusal and tells the caller nothing more, on
+purpose: an unauthenticated caller should not be able to tell "wrong token"
+from "nothing here". The reason is on the server, in the log line's `via`
+field.
+
+| `via` | What went wrong |
+|---|---|
+| `header` | Token was sent but is malformed or unknown |
+| `none` | No token reached the server at all — check the header name |
+| `header/kind-mismatch` | A project token at a `/group/` URL, or the reverse |
+| `header/label-mismatch` | Valid token, wrong `<name>` in the URL |
+| `header/unseeded` | New sub-project on a group with `seed: false` |
+
+A malformed header refuses outright rather than falling back to any other
+method. That is deliberate: a mistyped header that silently kept working would
+hide the misconfiguration indefinitely.
 
 ---
 

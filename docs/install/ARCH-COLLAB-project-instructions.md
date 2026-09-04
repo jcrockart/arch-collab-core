@@ -30,7 +30,8 @@ Connectors this project expects:
   numeric page ID. Always set `versionMessage` — it is the audit trail a
   governance-driven system depends on. Pass raw HTML in `body`, never
   HTML-escaped.
-- **arch-mcp** (`https://mcp.crockart.com.au/`) — 11 tools. Eight
+- **arch-mcp** (`https://mcp.crockart.com.au/project/arch-collab/`, token in
+  the `x-api-key` header) — 11 tools. Eight
   `arch_session_*` (lifecycle + file access scoped to `metadata/`, writes
   session-gated) and three `arch_site_*` (file access scoped to `site/`, not
   session-gated, serves `crockart.com.au/arch-collab/`).
