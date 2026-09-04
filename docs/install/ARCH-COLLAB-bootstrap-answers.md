@@ -7,7 +7,7 @@ Questions 5–10 exist because a stale install gives a *specific* wrong answer,
 not a vague one. That is the whole design: a check that cannot fail is not a
 check. The "wrong answer means" column tells you what to go and fix.
 
-Current as of **2026-09-02**. When the system changes, change this file in the
+Current as of **2026-09-04**. When the system changes, change this file in the
 same commit — an answer key that has gone stale is worse than none, because it
 fails correct answers and passes wrong ones.
 
@@ -15,7 +15,7 @@ fails correct answers and passes wrong ones.
 
 | # | Expected | A wrong answer means |
 |---|---|---|
-| 1 | **14 files, no duplicates.** | A repeated filename means a revision was uploaded *alongside* its predecessor rather than over it. This happened with `ARCH-CONSTITUTION.md` (25 Aug vs 27 Aug) and the two gave contradictory instructions, with retrieval free to return either. Delete the older by first line or size, never by list position. |
+| 1 | **15 files, no duplicates.** | A repeated filename means a revision was uploaded *alongside* its predecessor rather than over it. This happened with `ARCH-CONSTITUTION.md` (25 Aug vs 27 Aug) and the two gave contradictory instructions, with retrieval free to return either. Delete the older by first line or size, never by list position. |
 | 2 | **Rule 12**, beginning "This project's own deliverable is a condensed, installable bootstrap materials bundle…" | "Rule 11" means the pre-27-Aug constitution is present or `INDEX.md` is stale. |
 | 3 | **11 tools**: 7 `arch_session_*` (start, status, commit, discard, write_file, read_file, list_files), 1 `arch_codegen_preview`, 3 `arch_site_*`. A four-family breakdown is equally correct — `codegen_preview` is not an `arch_session_*` tool, though it is session-scoped. | 3 tools means the `rcp-dev` token is in the header instead of `arch-collab`. A 404 means the URL and the profile's label disagree. |
 | 4 | No session open; site files present (1 as of 2026-09-02). | An empty list with `success: true` is the failure mode from 2026-09-01 — a lane pointing at a directory that does not exist. Do not read it as "no files". |

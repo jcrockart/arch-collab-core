@@ -24,6 +24,8 @@ rather than the tool.
 |---|---|---|
 | `ARCH-COLLAB-project-instructions.md` | Instruction text for an authoring project | Paste into **Set project instructions** |
 | `ARCH-COLLAB-bootstrap-prompt.md` | Self-test for a fresh install | Paste as the **first message** in a new thread |
+| `ARCH-COLLAB-bootstrap-answers.md` | Answer key for the above | Grade against it. **Never paste it into the thread being tested** |
+| `BOOTSTRAP.md` | Install check + project inception, run on demand | Upload as a **knowledge file** in *every* project from this bundle |
 | `RCP-DEV-project-instructions.md` | Instruction text for a consumer project | Paste into **Set project instructions** |
 | `RCP-DEV-context.md` | Background on the `rcp` dev site | Upload as a **knowledge file** |
 | `NOTES-automation.md` | Why there is no installer, and the `arch_bootstrap` proposal | Read once; it is a design note, not a step |
@@ -105,8 +107,9 @@ Both of these propagate into every future install if not fixed first.
 2. **Set project instructions** → paste the whole of
    `ARCH-COLLAB-project-instructions.md` (skip the title and the `---` rule).
 
-3. **Upload knowledge files.** Download these 14 from the existing ARCH-COLLAB
-   project and drag them in together — multi-select works, it is one drag:
+3. **Upload knowledge files.** Download these 15 and drag them in together —
+   multi-select works, it is one drag. Fourteen come from the existing
+   ARCH-COLLAB project; `BOOTSTRAP.md` comes from this folder:
 
    - `ARCH-CONSTITUTION.md`
    - `PROJECT-CONTEXT.md`
@@ -115,6 +118,7 @@ Both of these propagate into every future install if not fixed first.
    - `entity.schema.json`, `domain-model.schema.json`,
      `workflow.schema.json`, `integration.schema.json`
    - `todo.json`, `todo.domain.json`, `todo.workflow.json`, `todo.api.json`
+   - `BOOTSTRAP.md`
 
 4. **Add connectors** — Customize → Connectors → Add ▾ → Add custom connector:
 
@@ -128,6 +132,17 @@ Both of these propagate into every future install if not fixed first.
    PASS/FAIL table before doing any real work. It checks that the knowledge
    files landed, both tool families are reachable, and whether
    `PROJECT-CONTEXT.md`'s snapshot has already gone stale against Confluence.
+   Grade it against `ARCH-COLLAB-bootstrap-answers.md`, which you keep to
+   yourself — several questions are chosen because a stale install gives a
+   *specific* wrong answer, and a thread that can see the expected answers
+   proves nothing.
+
+   That prompt and `BOOTSTRAP.md` are not the same thing and both are worth
+   keeping. The prompt is a one-off acceptance test against a fixed answer key
+   for *this* install, so it goes stale when the system changes. `BOOTSTRAP.md`
+   is the standing check — say "run the bootstrap check" in any thread, at any
+   time — and it works on any project because it grades invariants rather than
+   values, then collects config and emits a `project.config.json` draft.
 
 About three minutes.
 
@@ -137,7 +152,7 @@ About three minutes.
 
 1. **Create the project.**
 2. **Set project instructions** → paste `RCP-DEV-project-instructions.md`.
-3. **Upload knowledge** → `RCP-DEV-context.md` only.
+3. **Upload knowledge** → `RCP-DEV-context.md` and `BOOTSTRAP.md`.
 4. **Add connector** → **ARCH (rcp-dev)**
    - URL `https://mcp.crockart.com.au/project/rcp-dev/`
    - Authentication **None**
