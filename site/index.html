@@ -1,0 +1,979 @@
+<title>ARCH Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f4f6f7;
+    --surface: #ffffff;
+    --surface-2: #eef2f4;
+    --ink: #16212c;
+    --ink-soft: #3c4b58;
+    --muted: #5c7080;
+    --accent: #c9631a;
+    --accent-ink: #ffffff;
+    --line: #d7dfe4;
+    --line-strong: #b9c6cd;
+    --grid-line: rgba(90, 120, 140, 0.08);
+    --focus: #1c7d8f;
+    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+    --font-body: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #10171d;
+      --surface: #161f26;
+      --surface-2: #1b262e;
+      --ink: #e9eef1;
+      --ink-soft: #c3ced5;
+      --muted: #8fa1ac;
+      --accent: #e2884a;
+      --accent-ink: #10171d;
+      --line: #2a3841;
+      --line-strong: #3c4e59;
+      --grid-line: rgba(160, 190, 205, 0.06);
+      --focus: #5fc4d6;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #10171d;
+    --surface: #161f26;
+    --surface-2: #1b262e;
+    --ink: #e9eef1;
+    --ink-soft: #c3ced5;
+    --muted: #8fa1ac;
+    --accent: #e2884a;
+    --accent-ink: #10171d;
+    --line: #2a3841;
+    --line-strong: #3c4e59;
+    --grid-line: rgba(160, 190, 205, 0.06);
+    --focus: #5fc4d6;
+  }
+
+  *{ box-sizing: border-box; }
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  a{ color: inherit; }
+  h1, h2, h3{ font-family: var(--font-display); text-wrap: balance; margin: 0; }
+  p{ margin: 0; }
+  ::selection{ background: var(--accent); color: var(--accent-ink); }
+  :focus-visible{ outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
+
+  .shell{
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    min-height: 100vh;
+  }
+
+  /* ---------- Left rail ---------- */
+  .rail{
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+    padding: 34px 26px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
+  }
+  .wordmark{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .wordmark .mark{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.7rem;
+    letter-spacing: 0.01em;
+  }
+  .wordmark .tag{
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .sheet-index{ display: flex; flex-direction: column; gap: 2px; }
+  .sheet-index .label{
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px 2px;
+  }
+  .rail-btn{
+    all: unset;
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    align-items: baseline;
+    gap: 10px;
+    padding: 11px 8px;
+    border-radius: 3px;
+    border-left: 2px solid transparent;
+  }
+  .rail-btn:hover{ background: var(--surface-2); }
+  .rail-btn .num{
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .rail-btn .name{
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    line-height: 1.3;
+  }
+  .rail-btn .desc{
+    grid-column: 2;
+    font-size: 0.76rem;
+    color: var(--muted);
+    line-height: 1.3;
+    margin-top: 2px;
+  }
+  .rail-btn[aria-current="true"]{
+    background: var(--surface-2);
+    border-left-color: var(--accent);
+  }
+  .rail-btn[aria-current="true"] .num{ color: var(--accent); }
+  .rail-btn[aria-current="true"] .name{ color: var(--ink); }
+
+  .rail-foot{
+    margin-top: auto;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  .rail-foot a{ color: var(--focus); text-decoration: none; }
+  .rail-foot a:hover{ text-decoration: underline; }
+
+  /* ---------- Content ---------- */
+  .content{
+    position: relative;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 34px 34px;
+    padding: 56px clamp(24px, 5vw, 72px) 90px;
+  }
+  .page{
+    max-width: 660px;
+    margin: 0 auto;
+    display: none;
+    animation: rise 0.5s ease both;
+  }
+  .page[data-active="true"]{ display: block; }
+  @media (prefers-reduced-motion: reduce){
+    .page{ animation: none; }
+  }
+  @keyframes rise{
+    from{ opacity: 0; transform: translateY(10px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow::after{
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: var(--line-strong);
+  }
+
+  h1.title{ font-size: clamp(2rem, 3.4vw, 2.7rem); font-weight: 500; line-height: 1.08; }
+  #overview h1.title{ font-size: clamp(2.4rem, 4.4vw, 3.5rem); }
+  .lede{
+    font-size: 1.12rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin-top: 18px;
+    max-width: 54ch;
+  }
+  #overview .lede{ font-size: 1.22rem; max-width: 56ch; }
+
+  .hero-in > *{ animation: hero-rise 0.7s cubic-bezier(.2,.7,.2,1) both; }
+  .hero-in > *:nth-child(2){ animation-delay: 0.08s; }
+  .hero-in > *:nth-child(3){ animation-delay: 0.16s; }
+  .hero-in > *:nth-child(4){ animation-delay: 0.24s; }
+  @keyframes hero-rise{
+    from{ opacity: 0; transform: translateY(14px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .hero-in > *{ animation: none; }
+  }
+
+  .kpi-row{
+    margin-top: 34px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .kpi{
+    background: var(--surface);
+    padding: 20px 16px;
+    text-align: left;
+  }
+  .kpi .n{
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .kpi .l{
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  @media (max-width: 640px){ .kpi-row{ grid-template-columns: repeat(2, 1fr); } }
+
+  .cta-panel{
+    margin-top: 56px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: 10px;
+    padding: 30px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .cta-panel .txt h3{
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.3rem;
+  }
+  .cta-panel .txt p{
+    margin-top: 6px;
+    font-size: 0.92rem;
+    opacity: 0.92;
+    max-width: 46ch;
+  }
+  .cta-btn{
+    all: unset;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    background: var(--accent-ink);
+    color: var(--accent);
+    padding: 12px 20px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .cta-btn:hover{ filter: brightness(0.96); }
+
+  .concept-tag{
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px dashed var(--line-strong);
+    border-radius: 20px;
+    padding: 5px 12px 5px 9px;
+    margin-bottom: 20px;
+  }
+  .concept-tag .dot{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .stamp{
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    font-size: clamp(2.3rem, 5.4vw, 4.2rem);
+    line-height: 0.98;
+    text-transform: uppercase;
+  }
+
+  .roster{
+    margin-top: 18px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .roster-row{
+    display: grid;
+    grid-template-columns: 56px 1.3fr 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .roster-row:first-child{ border-top: none; }
+  .roster-row.head{
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+  .roster-row .st{ font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+  .roster-row .who{ font-size: 0.9rem; color: var(--ink); }
+  .roster-row .who small{ display: block; color: var(--muted); font-size: 0.76rem; margin-top: 1px; }
+  .roster-row .focus{ font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-soft); }
+  .chip{
+    justify-self: end;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip::before{ content: ""; width: 6px; height: 6px; border-radius: 50%; }
+  .chip.ready{ background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+  .chip.ready::before{ background: var(--accent); }
+  .chip.preview{ background: color-mix(in srgb, var(--focus) 16%, transparent); color: var(--focus); }
+  .chip.preview::before{ background: var(--focus); }
+  .chip.open{ background: var(--surface-2); color: var(--muted); border: 1px dashed var(--line-strong); }
+  .chip.open::before{ background: var(--muted); }
+  @media (max-width: 640px){
+    .roster-row{ grid-template-columns: 40px 1fr auto; }
+    .roster-row .focus{ display: none; }
+  }
+
+  .rules-of-engagement{
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .roe{
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 16px;
+    padding: 15px 0;
+    border-top: 1px solid var(--line);
+    align-items: baseline;
+  }
+  .roe:last-child{ border-bottom: 1px solid var(--line); }
+  .roe .term{
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .roe p{ font-size: 0.92rem; color: var(--ink-soft); line-height: 1.6; }
+
+  .rally{
+    margin-top: 60px;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 40px 36px;
+    text-align: center;
+    position: relative;
+  }
+  .rally .stamp{ display: block; }
+  .rally p{
+    margin-top: 14px;
+    font-size: 0.94rem;
+    color: var(--ink-soft);
+    max-width: 48ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section{ margin-top: 52px; }
+  .section h2{
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 14px;
+  }
+  .section > p, .section li{
+    font-size: 0.98rem;
+    line-height: 1.68;
+    color: var(--ink-soft);
+    max-width: 62ch;
+  }
+  .section > p + p{ margin-top: 14px; }
+
+  code, .mono{ font-family: var(--font-mono); }
+  code{
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    font-size: 0.86em;
+  }
+
+  .belief-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-top: 16px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .belief{
+    background: var(--surface);
+    padding: 18px 20px;
+  }
+  .belief .k{
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .belief .v{
+    margin-top: 6px;
+    font-size: 0.92rem;
+    color: var(--ink);
+    line-height: 1.45;
+  }
+  @media (max-width: 640px){ .belief-grid{ grid-template-columns: 1fr; } }
+
+  .domain-strip{
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+  .domain-strip span{
+    padding: 10px 8px;
+    text-align: center;
+    flex: 1;
+    color: var(--muted);
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .domain-strip span:last-child{ border-right: none; }
+  .domain-strip span.hi{ color: var(--accent); background: var(--surface-2); }
+
+  /* flow diagram */
+  .flow{
+    margin-top: 20px;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+  .flow-node{
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 14px 16px;
+    min-width: 118px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+  }
+  .flow-node .t{ color: var(--ink); font-weight: 500; }
+  .flow-node .s{ color: var(--muted); font-size: 0.72rem; }
+  .flow-arrow{
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    color: var(--muted);
+  }
+  .flow-branch{ display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+  .flow-branch .flow-node.commit{ border-color: var(--accent); }
+  .flow-branch .flow-node.commit .t{ color: var(--accent); }
+  .flow-wrap{ overflow-x: auto; padding-bottom: 4px; }
+
+  .steps{ counter-reset: step; margin-top: 16px; display: flex; flex-direction: column; gap: 0; }
+  .step{
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 14px;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+  }
+  .step:last-child{ border-bottom: 1px solid var(--line); }
+  .step::before{
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    padding-top: 2px;
+  }
+  .step h3{
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.96rem;
+    margin-bottom: 4px;
+  }
+  .step p{ font-size: 0.9rem; color: var(--ink-soft); line-height: 1.6; }
+  .step pre{
+    margin: 10px 0 0;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink);
+  }
+
+  .toolset{
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .tool{
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 9px 11px;
+    color: var(--ink-soft);
+  }
+  @media (max-width: 640px){ .toolset{ grid-template-columns: 1fr; } }
+
+  .callout{
+    margin-top: 16px;
+    border-left: 2px solid var(--accent);
+    background: var(--surface);
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .callout strong{ color: var(--ink); }
+
+  .page-nav{
+    margin-top: 64px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+  .page-nav button{
+    all: unset;
+    cursor: pointer;
+    color: var(--focus);
+  }
+  .page-nav button:hover{ text-decoration: underline; }
+  .page-nav .spacer{ visibility: hidden; }
+
+  @media (max-width: 780px){
+    .shell{ grid-template-columns: 1fr; }
+    .rail{
+      flex-direction: row;
+      align-items: center;
+      overflow-x: auto;
+      padding: 16px 18px;
+      gap: 22px;
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+    }
+    .wordmark{ flex-direction: row; align-items: baseline; gap: 8px; }
+    .sheet-index{ flex-direction: row; }
+    .rail-btn{ grid-template-columns: auto auto; white-space: nowrap; }
+    .rail-btn .desc{ display: none; }
+    .rail-foot{ display: none; }
+  }
+</style>
+
+<div class="shell">
+  <nav class="rail" aria-label="ARCH Field Guide sections">
+    <div class="wordmark">
+      <span class="mark">ARCH</span>
+      <span class="tag">Field Guide</span>
+    </div>
+    <div class="sheet-index">
+      <p class="label">Sheets</p>
+      <button class="rail-btn" data-target="overview" aria-current="true">
+        <span class="num">01</span><span class="name">Overview</span>
+        <span class="desc">What ARCH is and why metadata leads</span>
+      </button>
+      <button class="rail-btn" data-target="mechanism">
+        <span class="num">02</span><span class="name">Mechanism</span>
+        <span class="desc">The session-as-branch working loop</span>
+      </button>
+      <button class="rail-btn" data-target="setup">
+        <span class="num">03</span><span class="name">Setup</span>
+        <span class="desc">Installing the bundle, first session</span>
+      </button>
+      <button class="rail-btn" data-target="stations">
+        <span class="num">04</span><span class="name">Action Stations</span>
+        <span class="desc">Concept — a team running in parallel</span>
+      </button>
+    </div>
+    <p class="rail-foot">
+      Draft for review — nothing here is written to<br><a href="https://github.com/jcrockart/arch-collab-core" target="_blank" rel="noopener">arch-collab-core</a> yet.
+    </p>
+  </nav>
+
+  <main class="content">
+    <!-- ============ PAGE 1: OVERVIEW ============ -->
+    <article class="page" id="overview" data-active="true">
+      <div class="hero-in">
+      <p class="eyebrow">Sheet 01 / Why ARCH</p>
+      <h1 class="title">Decide your architecture once. Stop paying for it twice.</h1>
+      <p class="lede">Every team already has two versions of the truth — what the docs say, and what the code actually does — and they drift apart the moment a deadline gets tight. ARCH makes that impossible by construction: metadata is the <em>only</em> place a decision gets made. Code, schema, and runtime behaviour aren't kept in sync with it. They're generated from it, every time, on demand.</p>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="n">1</div><div class="l">Source of truth</div></div>
+        <div class="kpi"><div class="n">1</div><div class="l">Hard gate at commit</div></div>
+        <div class="kpi"><div class="n">8</div><div class="l">Agent-ready tools</div></div>
+        <div class="kpi"><div class="n">15</div><div class="l">Domains, zero overlap</div></div>
+      </div>
+      </div>
+
+      <div class="section">
+        <h2>What drift actually costs you</h2>
+        <p>Stale docs. Code that quietly disagrees with the spec. Two engineers, two vendors, or a human and an AI agent building against slightly different pictures of the same entity — and nobody notices until it ships. ARCH doesn't manage that risk. It removes the condition that causes it: there is nowhere else for a decision to live, so there is nothing left to fall out of sync.</p>
+        <p>And it stays disciplined about scope while it does this. ARCH doesn't run migrations, deploy schema, or manage environments — that's the runtime layer's job. ARCH owns exactly one thing, upstream of all of it: keep the description correct, and let everything else follow automatically.</p>
+      </div>
+
+      <div class="section">
+        <h2>Built on four non-negotiables</h2>
+        <div class="belief-grid">
+          <div class="belief">
+            <p class="k">DERIVATION, NOT SYNC</p>
+            <p class="v">Code is generated from metadata. Metadata is never reverse-engineered from code — so there's nothing to keep in sync, because there's only one copy.</p>
+          </div>
+          <div class="belief">
+            <p class="k">A PLATFORM, NOT A DEPENDENCY</p>
+            <p class="v">ARCH is authored once as an installable bundle every project copies in. No shared service, no uptime dependency, no version lock-step across teams.</p>
+          </div>
+          <div class="belief">
+            <p class="k">GOVERNANCE THAT DOESN'T SLOW YOU DOWN</p>
+            <p class="v">Ideas stay unrestricted inside a session — sketch, argue, reshape, freely. Governance shows up exactly once: at the moment something asks to become durable.</p>
+          </div>
+          <div class="belief">
+            <p class="k">COMMITTED AND TRUSTED, KEPT SEPARATE</p>
+            <p class="v">Passing validation and earning human sign-off are two different claims, tracked independently — so "it's in main" never quietly gets read as "it's approved."</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Fifteen domains. Not one square inch of overlap.</h2>
+        <p>The rules themselves are organized as fifteen numbered domains, each owning exactly one concern — from mission and structure at the low numbers, through governance, collaboration, and codegen, to platform and metadata schema at the top. No domain reaches into another's territory; a session that needs to touch two concerns cites both explicitly rather than blurring the line.</p>
+        <div class="domain-strip">
+          <span class="hi">10 Mission</span>
+          <span>21 Structure</span>
+          <span>22 Governance</span>
+          <span>23 Collab</span>
+          <span>51 Codegen</span>
+          <span>61 Platform</span>
+          <span>71 Dev Env</span>
+          <span class="hi">95 Metadata</span>
+        </div>
+      </div>
+
+      <div class="cta-panel">
+        <div class="txt">
+          <h3>See the mechanism that makes this safe.</h3>
+          <p>One gate, one atomic merge, zero partial states. Sheet 02 walks through exactly how a session earns its way into <code style="background:transparent;border:none;padding:0;color:inherit;">main</code>.</p>
+        </div>
+        <button type="button" class="cta-btn" data-jump="mechanism">Show me the loop →</button>
+      </div>
+    </article>
+
+    <!-- ============ PAGE 2: MECHANISM ============ -->
+    <article class="page" id="mechanism">
+      <p class="eyebrow">Sheet 02 / Mechanism</p>
+      <h1 class="title">No partial states. No silent exceptions. Two endings, always.</h1>
+      <p class="lede">Every unit of work — human-driven or agent-driven — follows the same shape: branch, iterate freely, then either commit or discard. That's not a simplification for the pitch deck; it's the whole guarantee. There is no third outcome, and nothing ever lingers half-applied once a session closes.</p>
+
+      <div class="section">
+        <h2>The loop</h2>
+        <div class="flow-wrap">
+          <div class="flow">
+            <div class="flow-node">
+              <span class="t">start</span>
+              <span class="s">branch from main</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <span class="t">preview</span>
+              <span class="s">fuzzy, disposable, warn-only</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-branch">
+              <div class="flow-node commit">
+                <span class="t">commit</span>
+                <span class="s">full validation → merge to main</span>
+              </div>
+              <div class="flow-node">
+                <span class="t">discard</span>
+                <span class="s">branch closes, main untouched</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:18px;">Preview mode is where most of the thinking happens. Validation still runs, but only as a warning — nothing blocks iteration, and a session can stay open indefinitely while an idea gets sketched, argued with, and reshaped. Nothing about that phase is durable, which is exactly what makes it safe to move fast in.</p>
+      </div>
+
+      <div class="section">
+        <h2>Commit is the one hard gate</h2>
+        <p>Everywhere else in the loop, an AI agent may originate metadata without asking permission first — that's the "progressive governance" belief made concrete. The single non-optional checkpoint is <code>arch session commit</code>: full structural and semantic validation runs against the session's current state, with no exceptions and no override.</p>
+        <p>Pass, and the merge is atomic — a new version is tagged per the project's cascade rules, canonical codegen fires against the merged state, and the branch retires. Fail, and the commit is simply aborted: the branch stays open, unchanged, and <code>main</code> is provably untouched. Nothing partial ever lands.</p>
+        <div class="callout"><strong>Committed ≠ trusted.</strong> A passing commit means the metadata is structurally and semantically valid — not that a human has signed off on it. ARCH tracks those as two separate axes on purpose, so "durable" and "approved" never get silently conflated.</div>
+      </div>
+
+      <div class="section">
+        <h2>Small slices beat one big review</h2>
+        <p>The recommended rhythm is small, frequent, coherent commits rather than a single exhausting review at the end of a long session. It isn't enforced — Preview mode will happily let a session run as long as it needs to — but it's the pattern the rest of the design assumes: cheap to commit, cheap to discard, cheap to try again.</p>
+      </div>
+
+      <div class="cta-panel">
+        <div class="txt">
+          <h3>Ready to see the switching cost?</h3>
+          <p>Spoiler: it's four files and one command. Sheet 03 takes you from an empty folder to your first commit.</p>
+        </div>
+        <button type="button" class="cta-btn" data-jump="setup">Get started →</button>
+      </div>
+    </article>
+
+    <!-- ============ PAGE 3: SETUP ============ -->
+    <article class="page" id="setup">
+      <p class="eyebrow">Sheet 03 / Setup</p>
+      <h1 class="title">Zero to first commit in four steps. No service to stand up.</h1>
+      <p class="lede">A new project doesn't depend on ARCH as a running service — it copies in a small, self-contained bundle and runs its own independent session lifecycle from there. There's no account, no server, nothing to keep online for it to work.</p>
+
+      <div class="section">
+        <h2>What's in the bundle</h2>
+        <p>Four pieces travel together: <code>arch.py</code>, the CLI that wraps the session lifecycle over plain git; <code>validate.py</code>, which checks structural and semantic rules against the metadata tree; the JSON Schemas each metadata category is checked against; and <code>project.config.json</code>, the one file specific to your project — its git remote, hosting target, and capability selection.</p>
+      </div>
+
+      <div class="section">
+        <h2>First session, start to finish</h2>
+        <div class="steps">
+          <div class="step">
+            <div>
+              <h3>Copy the bundle in</h3>
+              <p>Drop <code>arch.py</code>, <code>validate.py</code>, and the schemas into your project's repo, alongside a <code>project.config.json</code> you fill in once.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div>
+              <h3>Open a session</h3>
+              <p>Branches your metadata tree from the current <code>main</code> and records where it started from.</p>
+              <pre>arch session start add-customer-entity</pre>
+            </div>
+          </div>
+          <div class="step">
+            <div>
+              <h3>Sketch freely</h3>
+              <p>Add or edit entities, domain rules, workflows, integrations. Preview as often as you like — nothing here blocks on validation.</p>
+              <pre>arch codegen preview</pre>
+            </div>
+          </div>
+          <div class="step">
+            <div>
+              <h3>Commit when it's solid</h3>
+              <p>Runs the full validation gate. Passes merge atomically and tag a new version; failures leave the branch open to fix and retry.</p>
+              <pre>arch session commit --minor</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Or let an agent call it directly</h2>
+        <p>The same four steps are also exposed as MCP tools, so an AI agent can run the loop without shelling out to the CLI itself — useful when the session is being driven from a chat interface rather than a terminal.</p>
+        <div class="toolset">
+          <span class="tool">arch_session_start</span>
+          <span class="tool">arch_codegen_preview</span>
+          <span class="tool">arch_session_commit</span>
+          <span class="tool">arch_session_discard</span>
+          <span class="tool">arch_session_status</span>
+          <span class="tool">arch_session_write_file</span>
+          <span class="tool">arch_session_read_file</span>
+          <span class="tool">arch_session_list_files</span>
+        </div>
+        <p style="margin-top:14px;">The write/read/list tools are scoped strictly to the metadata tree — an agent can populate a session's content through them, but the commit gate above still runs in full before any of it reaches <code>main</code>.</p>
+      </div>
+
+      <div class="cta-panel">
+        <div class="txt">
+          <h3>Now imagine four of these running at once.</h3>
+          <p>One person, one session, one gate — you've just seen the whole loop. Sheet 04 is what happens when a whole team calls it at the same time.</p>
+        </div>
+        <button type="button" class="cta-btn" data-jump="stations">Action stations →</button>
+      </div>
+    </article>
+
+    <!-- ============ PAGE 4: ACTION STATIONS ============ -->
+    <article class="page" id="stations">
+      <p class="eyebrow">Sheet 04 / Action Stations</p>
+      <p class="concept-tag"><span class="dot"></span>Concept — proposed operating mode, not yet run</p>
+      <h1 class="title">One session per person. One signal. Full speed, in parallel.</h1>
+      <p class="lede">Everything on Sheets 01–03 already supports this — it's just never been named or drilled. A session is unrestricted while it's open and only checked at the door on the way out, which means there's no structural reason a team has to work one branch at a time. Call it, and every station moves at once.</p>
+
+      <div class="section">
+        <h2>How the call works</h2>
+        <p>Nobody waits for a green light to start working — that's already true today. "Action Stations" is the moment a team deliberately synchronizes on it: everyone claims a station, opens a session against it, and drives it in Preview mode with no coordination overhead, because nothing they do there is visible or binding to anyone else yet. The discipline isn't in the parallelism — ARCH already gives you that for free. It's in what happens at the muster.</p>
+      </div>
+
+      <div class="section">
+        <h2>A station roster, illustrated</h2>
+        <p>Not a real run — just what it'd look like mid-drill. Four people (or three people and an agent), four sessions, four domains, moving independently until each one is ready to report to the gate.</p>
+        <div class="roster">
+          <div class="roster-row head">
+            <span>Sta.</span><span>Owner</span><span>Focus</span><span></span>
+          </div>
+          <div class="roster-row">
+            <span class="st">01</span>
+            <span class="who">J. Crockart<small>session: entities-v2</small></span>
+            <span class="focus">entities/</span>
+            <span class="chip ready">commit ready</span>
+          </div>
+          <div class="roster-row">
+            <span class="st">02</span>
+            <span class="who">Agent: Claude<small>session: workflow-retry-policy</small></span>
+            <span class="focus">workflows/</span>
+            <span class="chip preview">in preview</span>
+          </div>
+          <div class="roster-row">
+            <span class="st">03</span>
+            <span class="who">R. Okafor<small>session: stripe-integration</small></span>
+            <span class="focus">integrations/</span>
+            <span class="chip preview">in preview</span>
+          </div>
+          <div class="roster-row">
+            <span class="st">04</span>
+            <span class="who">Unmanned</span>
+            <span class="focus">domain/</span>
+            <span class="chip open">station open</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Rules of engagement</h2>
+        <p>The military framing is a good fit because the mechanics underneath already match it — this is a translation, not a new set of rules.</p>
+        <div class="rules-of-engagement">
+          <div class="roe">
+            <span class="term">Man a station</span>
+            <p>Claim a domain, run <code>arch session start</code>. That's the whole enlistment — no lock to request, no one to ask.</p>
+          </div>
+          <div class="roe">
+            <span class="term">Free maneuver</span>
+            <p>Preview mode the whole way. Validation only warns, so a station can sketch, gut, and rebuild without ever blocking another station.</p>
+          </div>
+          <div class="roe">
+            <span class="term">Report to the gate</span>
+            <p>Nothing a station did counts until <code>arch session commit</code> clears it. This is the only checkpoint that exists — and it's the same one every solo session already goes through.</p>
+          </div>
+          <div class="roe">
+            <span class="term">Contested ground</span>
+            <p>Two stations touched the same entity? That's an ordinary git merge conflict, surfaced to whoever owns the overlap — not a standing lock that made everyone else wait for it.</p>
+          </div>
+          <div class="roe">
+            <span class="term">Stand down</span>
+            <p><code>arch session discard</code>. No trace on <code>main</code>, no penalty, no report to file. A station that didn't pan out simply didn't happen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="rally">
+        <span class="stamp">Action Stations</span>
+        <p>Every piece of this already exists on Sheets 01–03. The only thing "Action Stations" adds is the nerve to run four sessions at once instead of one — and trust the gate, same as always, to catch what actually collides.</p>
+      </div>
+    </article>
+
+    <div class="page-nav">
+      <button type="button" id="prevBtn">← previous sheet</button>
+      <button type="button" id="nextBtn">next sheet →</button>
+    </div>
+  </main>
+</div>
+
+<script>
+  (function(){
+    var order = ["overview", "mechanism", "setup", "stations"];
+    var buttons = Array.prototype.slice.call(document.querySelectorAll(".rail-btn"));
+    var pages = order.map(function(id){ return document.getElementById(id); });
+
+    function show(id){
+      order.forEach(function(o, i){
+        var active = o === id;
+        pages[i].dataset.active = active ? "true" : "false";
+        buttons[i].setAttribute("aria-current", active ? "true" : "false");
+      });
+      var idx = order.indexOf(id);
+      document.getElementById("prevBtn").style.visibility = idx === 0 ? "hidden" : "visible";
+      document.getElementById("nextBtn").style.visibility = idx === order.length - 1 ? "hidden" : "visible";
+      window.scrollTo(0, 0);
+    }
+
+    buttons.forEach(function(btn){
+      btn.addEventListener("click", function(){ show(btn.dataset.target); });
+    });
+
+    Array.prototype.slice.call(document.querySelectorAll("[data-jump]")).forEach(function(btn){
+      btn.addEventListener("click", function(){ show(btn.dataset.jump); });
+    });
+
+    document.getElementById("prevBtn").addEventListener("click", function(){
+      var current = order.find(function(o){ return document.getElementById(o).dataset.active === "true"; });
+      var idx = order.indexOf(current);
+      if (idx > 0) show(order[idx - 1]);
+    });
+    document.getElementById("nextBtn").addEventListener("click", function(){
+      var current = order.find(function(o){ return document.getElementById(o).dataset.active === "true"; });
+      var idx = order.indexOf(current);
+      if (idx < order.length - 1) show(order[idx + 1]);
+    });
+
+    show("overview");
+  })();
+</script>
