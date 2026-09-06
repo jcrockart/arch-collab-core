@@ -27,6 +27,7 @@ REPO = Path(__file__).parent
 VALIDATOR = REPO / "validate.py"
 VERSION_FILE = REPO / "VERSION.json"
 SESSION_FILE = REPO / ".arch-session.json"
+METADATA_DIR = REPO / "metadata"
 
 # CLI Design §7.2 (PROPOSED, pending James's confirmation): discard is a
 # soft-delete with a grace window, not an immediate hard delete. Discarded
@@ -101,6 +102,26 @@ def session_commit(bump):
         print(f"\nCOMMIT ABORTED. Branch '{branch}' remains open and unchanged. main is untouched.")
         print("Fix the errors above and run `arch session commit` again, or `arch session discard`.")
         sys.exit(1)
+
+    # --- FIX (Constitution rule 5 caveat / inception-spike Finding 4,
+    # 2026-08-26): stage and commit the session's own metadata changes onto
+    # THIS branch before merging to main. Previously this function jumped
+    # straight to `checkout main` + `merge --no-ff branch` without ever
+    # committing metadata/ on the session branch itself — so a file written
+    # during the session (by hand or via arch_session_write_file) stayed an
+    # untracked working-tree file the whole time. The merge below had
+    # nothing real to bring across, VERSION.json was the only thing that
+    # ever actually got committed, and `git ls-files` on main afterward
+    # would not show the metadata file despite the printed "COMMITTED"
+    # message. Guard on METADATA_DIR existing (a very first session on a
+    # freshly-bootstrapped repo may not have the directory yet) and on
+    # there being something staged (an empty session, per Finding 1, is
+    # still valid and must not fail commit).
+    if METADATA_DIR.exists():
+        sh("add", "-A", "metadata")
+        staged = sh("status", "--porcelain", "--", "metadata").stdout.strip()
+        if staged:
+            sh("commit", "-m", f"Session metadata: {branch}")
 
     # Passed validation -> atomic merge + version bump + canonical codegen
     new_version = bump_version(bump)
