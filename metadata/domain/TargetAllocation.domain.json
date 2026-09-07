@@ -1,0 +1,8 @@
+{
+  "entity": "TargetAllocation",
+  "aggregate": "Portfolio",
+  "events": [
+    "TargetAllocationSet",
+    "TargetAllocationChanged"
+  ]
+}

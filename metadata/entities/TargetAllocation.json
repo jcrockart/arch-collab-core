@@ -1,0 +1,11 @@
+{
+  "entity": "TargetAllocation",
+  "attributes": {
+    "portfolioId": "Code",
+    "assetClassId": "Code",
+    "percentage": "Percentage"
+  },
+  "invariants": [
+    "percentage >= 0 && percentage <= 100"
+  ]
+}

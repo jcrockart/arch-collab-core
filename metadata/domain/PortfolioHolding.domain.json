@@ -1,0 +1,9 @@
+{
+  "entity": "PortfolioHolding",
+  "aggregate": "Portfolio",
+  "events": [
+    "HoldingAdded",
+    "HoldingAmountUpdated",
+    "HoldingRemoved"
+  ]
+}
