@@ -1,0 +1,9 @@
+{
+  "code": {
+    "gate": [
+      {"name": "compile-arch", "cmd": ["python3", "-m", "py_compile", "arch.py"]},
+      {"name": "compile-validate", "cmd": ["python3", "-m", "py_compile", "validate.py"]}
+    ],
+    "stage": {"label": "code", "paths": ["arch.py", "validate.py", "arch-gate.json"]}
+  }
+}

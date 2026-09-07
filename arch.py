@@ -25,6 +25,31 @@ from pathlib import Path
 
 REPO = Path(__file__).parent
 VALIDATOR = REPO / "validate.py"
+
+GATE_CONFIG = REPO / "arch-gate.json"
+
+
+def default_gate():
+    return [{"name": "validate", "cmd": [sys.executable, str(VALIDATOR)]}]
+
+
+def default_stage():
+    return {"label": "metadata", "paths": ["metadata"]}
+
+
+def load_lane_config(lane):
+    config = {}
+    if GATE_CONFIG.exists():
+        config = json.loads(GATE_CONFIG.read_text())
+    if lane in config:
+        return config[lane]
+    if lane == "metadata":
+        return {"gate": default_gate(), "stage": default_stage()}
+    print(f"No configuration found for lane '{lane}' in {GATE_CONFIG.name}.")
+    print(f"Add a \"{lane}\": {{\"gate\": [...], \"stage\": {{...}}}} entry to {GATE_CONFIG.name} before starting a '{lane}' session.")
+    sys.exit(1)
+
+
 VERSION_FILE = REPO / "VERSION.json"
 SESSION_FILE = REPO / ".arch-session.json"
 METADATA_DIR = REPO / "metadata"
@@ -64,7 +89,7 @@ def bump_version(kind):
 # ---------------------------------------------------------------------------
 # session start
 # ---------------------------------------------------------------------------
-def session_start(name):
+def session_start(name, lane="metadata"):
     if SESSION_FILE.exists():
         print("A session is already active. Commit or discard it before starting another.")
         sys.exit(1)
@@ -77,9 +102,10 @@ def session_start(name):
         "branch": branch,
         "base_commit": base,
         "started_at": datetime.now(timezone.utc).isoformat(),
+        "lane": lane,
     }, indent=2))
 
-    print(f"Session started: branch '{branch}' from {base[:8]}")
+    print(f"Session started: branch '{branch}' from {base[:8]} (lane: {lane})")
     print("Origination is unrestricted in this session (22-ARCH-GOVERNANCE §22.7).")
     print("Run `arch codegen preview` any time for disposable, fuzzy-state output.")
 
@@ -94,14 +120,17 @@ def session_commit(bump):
 
     session = json.loads(SESSION_FILE.read_text())
     branch = session["branch"]
+    lane = session.get("lane", "metadata")
+    lane_config = load_lane_config(lane)
 
-    print(f"Validating session '{branch}' before commit...\n")
-    result = subprocess.run([sys.executable, str(VALIDATOR)], cwd=REPO)
-
-    if result.returncode != 0:
-        print(f"\nCOMMIT ABORTED. Branch '{branch}' remains open and unchanged. main is untouched.")
-        print("Fix the errors above and run `arch session commit` again, or `arch session discard`.")
-        sys.exit(1)
+    print(f"Validating session '{branch}' (lane: {lane}) before commit...\n")
+    for step in lane_config["gate"]:
+        print(f"-- gate: {step['name']}")
+        result = subprocess.run(step["cmd"], cwd=REPO)
+        if result.returncode != 0:
+            print(f"\nCOMMIT ABORTED at gate '{step['name']}'. Branch '{branch}' remains open and unchanged. main is untouched.")
+            print("Fix the errors above and run `arch session commit` again, or `arch session discard`.")
+            sys.exit(1)
 
     # --- FIX (Constitution rule 5 caveat / inception-spike Finding 4,
     # 2026-08-26): stage and commit the session's own metadata changes onto
@@ -117,28 +146,38 @@ def session_commit(bump):
     # freshly-bootstrapped repo may not have the directory yet) and on
     # there being something staged (an empty session, per Finding 1, is
     # still valid and must not fail commit).
-    if METADATA_DIR.exists():
-        sh("add", "-A", "metadata")
-        staged = sh("status", "--porcelain", "--", "metadata").stdout.strip()
+    stage = lane_config["stage"]
+    stage_paths = [sp for sp in stage["paths"] if (REPO / sp).exists()]
+    if stage_paths:
+        sh("add", "-A", "--", *stage_paths)
+        staged = sh("status", "--porcelain", "--", *stage_paths).stdout.strip()
         if staged:
-            sh("commit", "-m", f"Session metadata: {branch}")
+            sh("commit", "-m", f"Session {stage['label']}: {branch}")
 
-    # Passed validation -> atomic merge + version bump + canonical codegen
-    new_version = bump_version(bump)
-    tag = f"v{new_version['major']}.{new_version['minor']}.{new_version['patch']}"
+    # Passed validation -> atomic merge; metadata lane also bumps version + runs Canonical codegen
+    if lane == "metadata":
+        new_version = bump_version(bump)
+        tag = f"v{new_version['major']}.{new_version['minor']}.{new_version['patch']}"
 
-    sh("checkout", "main")
-    sh("merge", "--no-ff", branch, "-m", f"Session commit: {branch} -> {tag}")
-    VERSION_FILE.write_text(json.dumps(new_version, indent=2))
-    sh("add", "VERSION.json")
-    sh("commit", "-m", f"Bump version to {tag}")
-    sh("tag", tag)
-    sh("branch", "-d", branch)
-    SESSION_FILE.unlink()
+        sh("checkout", "main")
+        sh("merge", "--no-ff", branch, "-m", f"Session commit: {branch} -> {tag}")
+        VERSION_FILE.write_text(json.dumps(new_version, indent=2))
+        sh("add", "VERSION.json")
+        sh("commit", "-m", f"Bump version to {tag}")
+        sh("tag", tag)
+        sh("branch", "-d", branch)
+        SESSION_FILE.unlink()
 
-    print(f"\nCOMMITTED as {tag}. Session '{branch}' merged to main and retired.")
-    print("Running Canonical codegen against merged state...")
-    codegen_generate()
+        print(f"\nCOMMITTED as {tag}. Session '{branch}' merged to main and retired.")
+        print("Running Canonical codegen against merged state...")
+        codegen_generate()
+    else:
+        sh("checkout", "main")
+        sh("merge", "--no-ff", branch, "-m", f"Session commit ({lane}): {branch}")
+        sh("branch", "-d", branch)
+        SESSION_FILE.unlink()
+
+        print(f"\nCOMMITTED. Session '{branch}' (lane: {lane}) merged to main and retired.")
 
 
 # ---------------------------------------------------------------------------
@@ -250,6 +289,7 @@ def main():
     ssub.required = True  # py3.6 compat
     start = ssub.add_parser("start")
     start.add_argument("name", nargs="?", default=None)
+    start.add_argument("--lane", default="metadata")
     commit = ssub.add_parser("commit")
     commit.add_argument("--major", action="store_const", const="major", dest="bump")
     commit.add_argument("--minor", action="store_const", const="minor", dest="bump")
@@ -268,7 +308,7 @@ def main():
 
     if args.cmd == "session":
         if args.action == "start":
-            session_start(args.name)
+            session_start(args.name, args.lane)
         elif args.action == "commit":
             session_commit(args.bump or "patch")
         elif args.action == "discard":
