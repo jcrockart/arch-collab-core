@@ -1,0 +1,12 @@
+{
+  "workflow": "PortfolioHoldingWorkflow",
+  "states": [
+    "Active",
+    "Removed"
+  ],
+  "transitions": {
+    "Add": { "from": "None", "to": "Active" },
+    "AdjustAmount": { "from": "Active", "to": "Active" },
+    "Remove": { "from": "Active", "to": "Removed" }
+  }
+}

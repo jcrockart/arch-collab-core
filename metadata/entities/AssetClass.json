@@ -1,0 +1,11 @@
+{
+  "entity": "AssetClass",
+  "attributes": {
+    "id": "Code",
+    "name": "String",
+    "category": "String"
+  },
+  "invariants": [
+    "name != ''"
+  ]
+}

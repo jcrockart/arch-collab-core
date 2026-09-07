@@ -1,0 +1,11 @@
+{
+  "entity": "PortfolioHolding",
+  "attributes": {
+    "portfolioId": "Code",
+    "assetId": "Code",
+    "actualAmount": "Money"
+  },
+  "invariants": [
+    "actualAmount >= 0"
+  ]
+}

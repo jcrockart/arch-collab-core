@@ -1,0 +1,12 @@
+{
+  "entity": "Asset",
+  "attributes": {
+    "id": "Code",
+    "ticker": "Code",
+    "name": "String",
+    "assetClassId": "Code"
+  },
+  "invariants": [
+    "ticker != ''"
+  ]
+}

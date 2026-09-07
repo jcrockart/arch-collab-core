@@ -1,0 +1,11 @@
+{
+  "entity": "Portfolio",
+  "attributes": {
+    "id": "Code",
+    "name": "String",
+    "description": "String"
+  },
+  "invariants": [
+    "name != ''"
+  ]
+}

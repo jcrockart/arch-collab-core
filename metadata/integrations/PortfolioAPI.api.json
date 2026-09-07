@@ -1,0 +1,29 @@
+{
+  "integration": "PortfolioAPI",
+  "endpoints": {
+    "AddHolding": {
+      "request": { "portfolioId": "Code", "assetId": "Code", "actualAmount": "Money" },
+      "response": { "portfolioId": "Code", "assetId": "Code" }
+    },
+    "UpdateHoldingAmount": {
+      "request": { "portfolioId": "Code", "assetId": "Code", "actualAmount": "Money" },
+      "response": {}
+    },
+    "RemoveHolding": {
+      "request": { "portfolioId": "Code", "assetId": "Code" },
+      "response": {}
+    },
+    "GetAssetClassBreakdown": {
+      "request": { "portfolioId": "Code" },
+      "response": {}
+    },
+    "CalculateRebalanceOrders": {
+      "request": { "portfolioId": "Code", "additionalCash": "Money" },
+      "response": {}
+    },
+    "ProjectGrowth": {
+      "request": { "portfolioId": "Code", "investmentYears": "Integer", "assumedReturn": "Percentage" },
+      "response": {}
+    }
+  }
+}
