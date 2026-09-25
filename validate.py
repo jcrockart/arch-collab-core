@@ -19,8 +19,13 @@ five backward-compatible additions from the Portfolio Engine capability-test
 spike — entity `relations`, entity `key`, computed attributes, a workflow
 `stateless` escape hatch, and recursive integration request/response shapes
 (TypeRef). Every existing file shape continues to validate exactly as
-before. The Project Config section (0) is unchanged from the version this
-was patched from.
+before.
+
+2026-09-25: the Project Config section (0) gains per-environment hosting
+(an `environments` block with `production` and optionally `staging`, as an
+alternative to the single `hosting` block) and accepts `sqlite` as a
+database. Every existing project.config.json stays valid unchanged. See
+claude/proposal-bootstrap-repo-step.md (ARCH-COLLAB), decision D.
 """
 
 import json
@@ -55,14 +60,24 @@ def load(path):
 # ---------------------------------------------------------------------------
 # 0. Project config — required, exactly one file, structural validation
 #    (project.config.schema.json — the installable-materials proposal)
-#    UNCHANGED by the v2 patch.
+#
+#    2026-09-25: hosting may now be declared per environment. A config
+#    declares EITHER the original single `hosting` block (still valid,
+#    unchanged) OR an `environments` block holding `production` (required)
+#    and optionally `staging`, each with the same hosting fields — ARCH
+#    projects are provisioned with both environments, which a single block
+#    couldn't describe. Declaring both is an error, so there's never doubt
+#    about which one is meant. `sqlite` joins the allowed databases: it has
+#    been the default engine for new projects since 2026-09-23, and without
+#    it every SQLite project's first metadata commit failed here.
 # ---------------------------------------------------------------------------
-CONFIG_REQUIRED = {"project", "git", "hosting", "deployment", "capabilities"}
+CONFIG_REQUIRED = {"project", "git", "deployment", "capabilities"}
 GIT_REQUIRED = {"remote", "default_branch"}
 HOSTING_REQUIRED = {"provider", "server_host", "account_username", "domain", "document_root", "deploy_path"}
+ENVIRONMENTS = {"staging", "production"}
 DEPLOYMENT_MECHANISMS = {"ssh-git-pull", "sftp-direct-sync", "provider-api"}
 RUNTIMES = {"static-html", "php", "node"}
-DATABASES = {"mysql", "none"}
+DATABASES = {"mysql", "sqlite", "none"}
 
 config_path = ROOT / "project.config.json"
 if not config_path.exists():
@@ -83,10 +98,39 @@ else:
         if missing_git:
             fail(f"{config_path}: git config missing field(s): {sorted(missing_git)}")
 
-        hosting_cfg = cfg.get("hosting", {})
-        missing_hosting = HOSTING_REQUIRED - hosting_cfg.keys()
-        if missing_hosting:
-            fail(f"{config_path}: hosting config missing field(s): {sorted(missing_hosting)}")
+        has_hosting = "hosting" in cfg
+        has_environments = "environments" in cfg
+        if has_hosting and has_environments:
+            fail(
+                f"{config_path}: declare either 'environments' (per environment) or the legacy "
+                f"single 'hosting' block, not both"
+            )
+        elif not has_hosting and not has_environments:
+            fail(
+                f"{config_path}: missing hosting — declare 'environments' (at least 'production', "
+                f"optionally 'staging') or the legacy single 'hosting' block"
+            )
+        elif has_hosting:
+            hosting_cfg = cfg.get("hosting", {})
+            missing_hosting = HOSTING_REQUIRED - hosting_cfg.keys()
+            if missing_hosting:
+                fail(f"{config_path}: hosting config missing field(s): {sorted(missing_hosting)}")
+        else:
+            environments = cfg.get("environments")
+            if not isinstance(environments, dict) or "production" not in environments:
+                fail(f"{config_path}: 'environments' must be an object with at least a 'production' entry")
+            else:
+                unknown = set(environments) - ENVIRONMENTS
+                if unknown:
+                    fail(f"{config_path}: unknown environment(s) {sorted(unknown)} — allowed: {sorted(ENVIRONMENTS)}")
+                for env_name in sorted(set(environments) & ENVIRONMENTS):
+                    env_cfg = environments[env_name]
+                    if not isinstance(env_cfg, dict):
+                        fail(f"{config_path}: environments.{env_name} must be an object")
+                        continue
+                    missing_env = HOSTING_REQUIRED - env_cfg.keys()
+                    if missing_env:
+                        fail(f"{config_path}: environments.{env_name} missing field(s): {sorted(missing_env)}")
 
         deployment_cfg = cfg.get("deployment", {})
         mechanism = deployment_cfg.get("mechanism")
