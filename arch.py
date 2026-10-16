@@ -3,12 +3,39 @@
 arch — the ARCH session/codegen CLI.
 
 Implements:
-  arch session start [name]      -> 23-ARCH-COLLAB §23.1.1, CLI Design §6.1
+  arch session start [name] [--lane NAME]
+                                  -> 23-ARCH-COLLAB §23.1.1, CLI Design §6.1
   arch session commit [--major|--minor|--patch]
                                   -> CLI Design §6.2 (the one hard gate)
   arch session discard           -> CLI Design §6.3
   arch codegen preview           -> 51-ARCH-CODEGEN §9 (Preview mode)
   arch codegen generate          -> 51-ARCH-CODEGEN §9 (Canonical mode)
+
+Lanes, versions and one-lane projects
+  A session belongs to one lane (`arch session start --lane NAME`, default
+  "metadata"). A lane's gate steps and stage paths come from its entry in
+  arch-gate.json. Only the "metadata" lane has built-in defaults (validate.py
+  as the gate, metadata/ as the stage path); any other lane needs an entry.
+
+  Whether a commit is versioned is set by the lane's "versioned" key in
+  arch-gate.json. If the key is absent, only a lane literally named
+  "metadata" is versioned. A versioned lane bumps the version, writes
+  VERSION.json, tags vX.Y.Z and runs the Canonical codegen step (see
+  session_commit and lane_is_versioned). An unversioned lane (for example
+  "code" with no flag) runs its gate, stages and commits its stage paths,
+  merges to main with --no-ff and retires the branch: no bump, no tag, no
+  VERSION.json, no codegen. The --major/--minor/--patch flags are ignored
+  there.
+
+  One-lane projects: list "metadata" in the code lane's stage.paths, add a
+  validate.py step to that lane's gate, and set "versioned": true on that
+  lane's entry in arch-gate.json. One session and one commit then carry both
+  app code and metadata, and every commit gets a version number. Without the
+  flag a one-lane project has no version numbers. App code and metadata do
+  not need separate sessions.
+
+  codegen_generate() currently only prints a completion line; it generates
+  nothing yet.
 
 This is a real implementation, not a spec: it shells out to git for branch/
 merge/delete, and to validate.py for the commit gate. It is designed to be
@@ -48,6 +75,12 @@ def load_lane_config(lane):
     print(f"No configuration found for lane '{lane}' in {GATE_CONFIG.name}.")
     print(f"Add a \"{lane}\": {{\"gate\": [...], \"stage\": {{...}}}} entry to {GATE_CONFIG.name} before starting a '{lane}' session.")
     sys.exit(1)
+
+
+def lane_is_versioned(lane, lane_config):
+    # "versioned" in the lane's arch-gate.json entry decides; when the key is
+    # absent, only a lane literally named "metadata" is versioned.
+    return bool(lane_config.get("versioned", lane == "metadata"))
 
 
 VERSION_FILE = REPO / "VERSION.json"
@@ -154,8 +187,8 @@ def session_commit(bump):
         if staged:
             sh("commit", "-m", f"Session {stage['label']}: {branch}")
 
-    # Passed validation -> atomic merge; metadata lane also bumps version + runs Canonical codegen
-    if lane == "metadata":
+    # Passed validation -> atomic merge; a versioned lane also bumps version + runs Canonical codegen
+    if lane_is_versioned(lane, lane_config):
         new_version = bump_version(bump)
         tag = f"v{new_version['major']}.{new_version['minor']}.{new_version['patch']}"
 
